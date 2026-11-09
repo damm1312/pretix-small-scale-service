@@ -1,0 +1,54 @@
+# Rendered by the nginx image: ${PRETIX_DOMAIN} comes from the environment.
+
+# Docker's embedded DNS returns one A record per `pretix` replica. Re-resolving
+# every 10s lets `docker compose up --scale pretix=N` take effect without
+# reloading nginx.
+resolver 127.0.0.11 valid=10s ipv6=off;
+
+server {
+    listen 80;
+    server_name ${PRETIX_DOMAIN};
+
+    location = /nginx-health {
+        access_log off;
+        return 200 "ok\n";
+    }
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${PRETIX_DOMAIN};
+
+    ssl_certificate     /etc/nginx/certs/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    client_max_body_size 50m;
+
+    location / {
+        # Variable forces runtime DNS resolution (see resolver above).
+        set $pretix_upstream http://pretix:80;
+        proxy_pass $pretix_upstream;
+
+        proxy_set_header Host              $http_host;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        proxy_read_timeout 120s;
+        proxy_next_upstream error timeout http_502 http_503;
+    }
+}

@@ -1,0 +1,4 @@
+.env
+nginx/certs/*.pem
+nginx/certs/*.key
+nginx/templates/default.conf
