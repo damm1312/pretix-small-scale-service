@@ -129,7 +129,7 @@ services:
         (
           while true; do
             sleep "$${CRON_INTERVAL_SECONDS}"
-            pretix runperiodic || echo "pretix cron failed" >&2
+            pretix runperiodic || echo "pretix runperiodic failed" >&2
           done
         ) &
         exec pretix "$$@"
