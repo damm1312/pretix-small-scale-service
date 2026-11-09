@@ -1,7 +1,7 @@
 # pretix small-scale service
 
 Docker Compose stack for [pretix](https://docs.pretix.eu/self-hosting/installation/docker_smallscale/):
-PostgreSQL, Redis, one or more pretix replicas (`all` mode, each running `pretix cron` itself) and an nginx
+PostgreSQL, Redis, one or more pretix replicas (`all` mode, each running `pretix runperiodic` itself) and an nginx
 reverse proxy that terminates TLS and load-balances across the replicas.
 
 ## First start
@@ -21,7 +21,7 @@ Log in at `<PRETIX_URL>/control/` with `admin@localhost` / `admin` and **change 
 docker compose up -d --scale pretix=3
 ```
 nginx re-resolves the `pretix` service name every 10 seconds, so new replicas receive traffic without an nginx
-reload. Every replica runs `pretix cron` every `CRON_INTERVAL_SECONDS`. Limit: all replicas share the `pretix_data`
+reload. Every replica runs `pretix ` every `CRON_INTERVAL_SECONDS`. Limit: all replicas share the `pretix_data`
 volume; across several hosts it must be shared storage (e.g. NFS).
 
 ## Upgrade
